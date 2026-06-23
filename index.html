@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>嫂嫂模拟器 - 完整版</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+    --primary: #d4a5a5; --primary-dark: #b8808f; --primary-light: #f5ebe0;
+    --secondary: #c9b1d4; --secondary-dark: #a78bb0; --secondary-light: #f0e6f6;
+    --accent: #e8d5d0; --bg: #faf5f2; --text: #5a4a4a; --text-light: #a09090;
+    --border: #e8ddd8; --card-bg: #fff9f7;
+}
+body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+    background: linear-gradient(135deg, #faf5f2 0%, #f5ebe0 50%, #f0e6f6 100%);
+    color: var(--text); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px;
+}
+.game-container {
+    width: 100%; max-width: 920px; background: rgba(255,255,255,0.95); border-radius: 24px;
+    box-shadow: 0 20px 80px rgba(168,130,140,0.15); overflow: hidden; min-height: 720px; display: flex; flex-direction: column;
+}
+.header { background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color: #fff; padding: 24px 30px; text-align: center; }
+.header h1 { font-size: 26px; font-weight: 600; letter-spacing: 3px; }
+.header .subtitle { font-size: 13px; opacity: 0.85; margin-top: 6px; letter-spacing: 1px; }
+.progress-bar { height: 4px; background: var(--primary-light); }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); transition: width 0.5s ease; }
+.main-content { flex: 1; display: flex; padding: 30px; gap: 30px; }
+.dialogue-area { flex: 1; display: flex; flex-direction: column; gap: 20px; }
+.scene-title { font-size: 14px; color: var(--secondary-dark); font-weight: 600; padding-bottom: 12px; border-bottom: 2px solid var(--secondary-light); letter-spacing: 1px; }
+.hero-card { display: flex; align-items: center; gap: 15px; padding: 18px; background: var(--primary-light); border-radius: 16px; border: 1px solid rgba(212,165,165,0.3); }
+.hero-avatar { width: 70px; height: 70px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--secondary)); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 28px; box-shadow: 0 4px 15px rgba(201,177,212,0.4); }
+.hero-info h3 { font-size: 17px; margin-bottom: 6px; color: var(--text); }
+.hero-tags { display: flex; gap: 8px; }
+.tag { padding: 3px 10px; background: #fff; border-radius: 15px; font-size: 11px; color: var(--primary-dark); border: 1px solid var(--primary); }
+.dialogue-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: 16px; padding: 24px; min-height: 120px; }
+.dialogue-text { font-size: 15px; line-height: 1.9; color: var(--text); }
+.dialogue-text .hero-name { color: var(--primary-dark); font-weight: 600; }
+.dialogue-text strong { color: var(--secondary-dark); }
+.options-area { display: flex; flex-direction: column; gap: 12px; }
+.option-btn { padding: 16px 22px; background: #fff; border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; font-size: 14px; text-align: left; transition: all 0.3s ease; color: var(--text); }
+.option-btn:hover { border-color: var(--primary); background: var(--primary-light); transform: translateX(4px); box-shadow: 0 4px 12px rgba(212,165,165,0.2); }
+.option-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.stats-panel { width: 260px; background: var(--secondary-light); border-radius: 16px; padding: 24px; border: 1px solid rgba(201,177,212,0.2); }
+.stats-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 20px; text-align: center; letter-spacing: 1px; }
+.stat-item { margin-bottom: 18px; }
+.stat-header { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+.stat-name { color: var(--text); }
+.stat-value { color: var(--primary-dark); font-weight: 600; }
+.stat-bar { height: 6px; background: rgba(255,255,255,0.7); border-radius: 3px; overflow: hidden; }
+.stat-fill { height: 100%; border-radius: 3px; transition: width 0.5s ease; }
+.stat-fill.affection { background: linear-gradient(90deg, #d4a5a5, #e8c4c4); }
+.stat-fill.courage { background: linear-gradient(90deg, #e8c4a0, #f0d8c0); }
+.stat-fill.emotion { background: linear-gradient(90deg, #c9b1d4, #ddd0e8); }
+.stat-fill.charm { background: linear-gradient(90deg, #e8a0b0, #f0c0cc); }
+.stat-fill.rational { background: linear-gradient(90deg, #a0c4d4, #c0dce8); }
+.stat-fill.happiness { background: linear-gradient(90deg, #b8d4a5, #d0e8c0); }
+.stat-change { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; padding: 14px 28px; border-radius: 20px; font-size: 16px; font-weight: 600; z-index: 1000; animation: popUp 1.5s ease forwards; box-shadow: 0 10px 30px rgba(212,165,165,0.4); }
+@keyframes popUp { 0%{opacity:0;transform:translate(-50%,-40%) scale(0.8)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)} }
+.setup-screen { padding: 40px; max-width: 600px; margin: 0 auto; }
+.setup-title { font-size: 26px; text-align: center; margin-bottom: 35px; color: var(--primary-dark); }
+.form-group { margin-bottom: 22px; }
+.form-label { display: block; font-size: 13px; color: var(--text-light); margin-bottom: 10px; letter-spacing: 0.5px; }
+.form-input { width: 100%; padding: 14px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; transition: border-color 0.3s; background: #fff; }
+.form-input:focus { outline: none; border-color: var(--primary); }
+.radio-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.radio-item { flex: 1; min-width: 80px; }
+.radio-item input { display: none; }
+.radio-item label { display: block; padding: 12px 18px; border: 1.5px solid var(--border); border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.3s; font-size: 13px; color: var(--text); }
+.radio-item input:checked + label { border-color: var(--primary); background: var(--primary-light); color: var(--primary-dark); font-weight: 600; }
+.start-btn { width: 100%; padding: 16px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.3s, box-shadow 0.3s; margin-top: 20px; letter-spacing: 1px; }
+.start-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(212,165,165,0.4); }
+.ending-screen { padding: 40px; text-align: center; }
+.ending-title { font-size: 28px; color: var(--secondary-dark); margin-bottom: 16px; }
+.ending-name { font-size: 22px; color: var(--primary-dark); margin-bottom: 25px; padding: 20px; background: var(--primary-light); border-radius: 16px; border: 1px solid rgba(212,165,165,0.3); }
+.ending-desc { font-size: 15px; color: var(--text); line-height: 1.8; max-width: 500px; margin: 0 auto 25px; }
+.final-stats { background: var(--secondary-light); padding: 25px; border-radius: 16px; margin-bottom: 25px; }
+.chapter-transition { padding: 30px; text-align: center; background: linear-gradient(135deg, var(--primary-light), var(--secondary-light)); border-radius: 16px; margin: 20px 0; }
+.chapter-transition h2 { font-size: 24px; color: var(--secondary-dark); margin-bottom: 10px; }
+.chapter-transition p { font-size: 15px; color: var(--text); }
+.restart-btn { padding: 14px 35px; background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; border: none; border-radius: 12px; font-size: 15px; cursor: pointer; transition: transform 0.3s; }
+.restart-btn:hover { transform: translateY(-2px); }
+.hidden { display: none !important; }
+@media (max-width: 768px) { .main-content { flex-direction: column; padding: 20px; } .stats-panel { width: 100%; } }
+</style>
+</head>
+<body>
+<div class="game-container">
+    <div class="header">
+        <h1>嫂嫂模拟器</h1>
+        <div class="subtitle">从粉丝到恋人的假想人生</div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 0%;"></div></div>
+    <div class="main-content">
+        <div class="dialogue-area" id="dialogueArea">
+            <div class="setup-screen" id="setupScreen">
+                <h2 class="setup-title">定制你的欧巴</h2>
+                <div class="form-group"><label class="form-label">名字</label><input type="text" class="form-input" id="heroName" value="金泰亨"></div>
+                <div class="form-group"><label class="form-label">担当</label><div class="radio-group">
+                    <div class="radio-item"><input type="radio" name="role" value="vocal" id="vocal" checked><label for="vocal">Vocal</label></div>
+                    <div class="radio-item"><input type="radio" name="role" value="dance" id="dance"><label for="dance">舞蹈</label></div>
+                    <div class="radio-item"><input type="radio" name="role" value="visual" id="visual"><label for="visual">门面</label></div>
+                    <div class="radio-item"><input type="radio" name="role" value="rap" id="rap"><label for="rap">Rap</label></div>
+                </div></div>
+                <div class="form-group"><label class="form-label">性格</label><div class="radio-group">
+                    <div class="radio-item"><input type="radio" name="personality" value="warm" id="warm" checked><label for="warm">风流温柔</label></div>
+                    <div class="radio-item"><input type="radio" name="personality" value="cool" id="cool"><label for="cool">内敛闷骚</label></div>
+                </div></div>
+                <div class="form-group"><label class="form-label">名气</label><div class="radio-group">
+                    <div class="radio-item"><input type="radio" name="fame" value="top" id="top" checked><label for="top">顶流</label></div>
+                    <div class="radio-item"><input type="radio" name="fame" value="mid" id="mid"><label for="mid">糊团</label></div>
+                    <div class="radio-item"><input type="radio" name="fame" value="small" id="small"><label for="small">小众</label></div>
+                </div></div>
+                <button class="start-btn" onclick="startGame()">下一步</button>
+            </div>
+            <div class="setup-screen hidden" id="heroineScreen">
+                <h2 class="setup-title">定制你自己</h2>
+                <div class="form-group"><label class="form-label">你有一笔存款（5万元），你打算怎么用？</label><div class="radio-group" style="flex-direction:column;">
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="money" value="beauty" id="beauty" checked><label for="beauty">整容升级 - 让自己更漂亮</label></div>
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="money" value="study" id="study"><label for="study">读书深造 - 提升内涵</label></div>
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="money" value="save" id="save"><label for="save">存起来 - 安全感最重要</label></div>
+                </div></div>
+                <div class="form-group"><label class="form-label">签售会你穿什么衣服？</label><div class="radio-group" style="flex-direction:column;">
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="dress" value="sexy" id="sexy"><label for="sexy">露肩包臀裙 - 展现曲线</label></div>
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="dress" value="pure" id="pure" checked><label for="pure">纯色连衣裙 - 清纯干净</label></div>
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="dress" value="cool" id="cool2"><label for="cool2">oversize卫衣+短裤 - 慵懒随性</label></div>
+                </div></div>
+                <div class="form-group"><label class="form-label">你的化妆风格是？</label><div class="radio-group" style="flex-direction:column;">
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="makeup" value="heavy" id="heavy" checked><label for="heavy">精致全妆 - 每个细节都完美</label></div>
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="makeup" value="light" id="light"><label for="light">裸妆淡抹 - 自然美</label></div>
+                    <div class="radio-item" style="min-width:100%"><input type="radio" name="makeup" value="none" id="none"><label for="none">素颜出门 - 靠气质取胜</label></div>
+                </div></div>
+                <button class="start-btn" onclick="startGame2()">开始游戏</button>
+            </div>
+            <div class="game-scenes hidden" id="gameScenes">
+                <div class="scene-title" id="sceneTitle"></div>
+                <div class="hero-card" id="heroCard">
+                    <div class="hero-avatar" id="heroAvatar">😊</div>
+                    <div class="hero-info"><h3 id="heroDisplayName"></h3><div class="hero-tags"><span class="tag" id="heroRoleTag"></span><span class="tag" id="heroPersonalityTag"></span><span class="tag" id="heroFameTag"></span></div></div>
+                </div>
+                <div class="dialogue-box"><div class="dialogue-text" id="dialogueText"></div></div>
+                <div class="options-area" id="optionsArea"></div>
+            </div>
+            <div class="ending-screen hidden" id="endingScreen">
+                <div class="ending-title" id="endingTitle">上章结局</div>
+                <div class="ending-name" id="endingName"></div>
+                <div class="ending-desc" id="endingDesc"></div>
+                <div class="final-stats" id="finalStats"></div>
+                <button class="restart-btn" onclick="location.reload()">重新开始</button>
+            </div>
+        </div>
+        <div class="stats-panel" id="statsPanel">
+            <div class="stats-title">我的状态</div>
+            <div class="stat-item"><div class="stat-header"><span class="stat-name">好感度</span><span class="stat-value" id="valAffection">15</span></div><div class="stat-bar"><div class="stat-fill affection" id="barAffection" style="width:15%"></div></div></div>
+            <div class="stat-item"><div class="stat-header"><span class="stat-name">勇气</span><span class="stat-value" id="valCourage">35</span></div><div class="stat-bar"><div class="stat-fill courage" id="barCourage" style="width:35%"></div></div></div>
+            <div class="stat-item"><div class="stat-header"><span class="stat-name">情商</span><span class="stat-value" id="valEmotion">35</span></div><div class="stat-bar"><div class="stat-fill emotion" id="barEmotion" style="width:35%"></div></div></div>
+            <div class="stat-item"><div class="stat-header"><span class="stat-name">魅力</span><span class="stat-value" id="valCharm">25</span></div><div class="stat-bar"><div class="stat-fill charm" id="barCharm" style="width:25%"></div></div></div>
+            <div class="stat-item"><div class="stat-header"><span class="stat-name">理智</span><span class="stat-value" id="valRational">50</span></div><div class="stat-bar"><div class="stat-fill rational" id="barRational" style="width:50%"></div></div></div>
+            <div class="stat-item"><div class="stat-header"><span class="stat-name">幸福值</span><span class="stat-value" id="valHappiness">50</span></div><div class="stat-bar"><div class="stat-fill happiness" id="barHappiness" style="width:50%"></div></div></div>
+        </div>
+    </div>
+</div>
+<script>
+const gameState = {
+    hero: { name: '', role: '', personality: '', fame: '' },
+    heroine: { money: '', dress: '', makeup: '' },
+    stats: { affection: 15, courage: 35, emotion: 35, charm: 25, rational: 50, happiness: 50 },
+    currentScene: 0,
+    chapter: 1,
+    flags: { barMet: false, rescuedDog: false, followedHome: false, becameInfluencer: false, brokeUp: false }
+};
+const roleLabels = { vocal: 'Vocal', dance: '舞蹈', visual: '门面', rap: 'Rap' };
+const personalityLabels = { warm: '风流温柔', cool: '内敛闷骚' };
+const fameLabels = { top: '顶流', mid: '糊团', small: '小众' };
+
+// 上章场景 (15个)
+const chapter1Scenes = [
+    null,
+    { title: 'Phase 1: 初见 - 签售会',
+      text: (h) => `签售会上，<span class="hero-name">${h.name}</span>抬头看了你一眼，笑着说："你好呀~今天谢谢你特意过来。"`,
+      options: [{text:'"欧巴我好喜欢你！从出道就开始追了！"',effects:{affection:5,courage:8}},{text:'"你好，今天状态很好呢。"',effects:{affection:8,emotion:5}}] },
+    { title: 'Phase 1: 互动 - 粉丝问答',
+      text: (h) => `公司发起粉丝问答活动，<span class="hero-name">${h.name}</span>被问到理想型。他回答："温柔的人吧..."你心跳加速。你要怎么回应？`,
+      options: [{text:'举手问一个关于音乐的问题，转移话题',effects:{affection:3,emotion:5}},{text:'默默记下他说的话，心里甜滋滋的',effects:{affection:5,happiness:5}},{text:'大声说"我会成为那样的人！"',effects:{affection:5,courage:10}}] },
+    { title: 'Phase 1: 互动 - SNS回复',
+      text: (h) => `${h.name}在SNS发状态"今天好累"。你准备回复：`,
+      check: (s) => { if (s.charm < 35) return { skip: true, alt: 6 }; return null; },
+      skipText: '你的魅力还不够引起他的注意，跳过此场景。',
+      options: [{text:'"推荐你试试泡澡放松，很有效的。"',effects:{affection:10,emotion:8}},{text:'"累的时候就想想，有人比你更累还在追你。"',effects:{affection:8,courage:8}}] },
+    { title: 'Phase 1: 互动 - 演唱会应援',
+      text: (h) => `演唱会上，<span class="hero-name">${h.name}</span>看到了你举的应援牌，朝你笑了笑。散场后你打算：`,
+      options: [{text:'截图发朋友圈，低调炫耀',effects:{courage:5,happiness:10}},{text:'写长文记录今天的心情',effects:{charm:8,emotion:8}},{text:'私信感谢他今天看你的那一眼',effects:{affection:8,courage:5}}] },
+    { title: 'Phase 2: 接近 - 魅力检定',
+      text: () => `你需要通过魅力检定才能解锁私信剧情。当前魅力值决定能否引起他的注意。`,
+      check: (s) => {
+        if (s.charm >= 40) return { skip: true, alt: 6, msg: '你的魅力成功吸引了他的注意，解锁了私信剧情！', effects: {affection:5,charm:5} };
+        return { skip: true, alt: 7, msg: '你的魅力还不足以让他主动联系你，但你还有一次机会——去酒吧偶遇。', effects: {courage:5} };
+      },
+      options: [] },
+    { title: 'Phase 2: 接近 - 首次私信',
+      text: (h) => `你收到了<span class="hero-name">${h.name}</span>的私聊！"最近在忙新专辑，好久没见了。"`,
+      options: [{text:'"我一直在等你！新歌什么时候出？"',effects:{affection:5,courage:5}},{text:'"好久不见，你还好吗？"',effects:{affection:10,emotion:8}},{text:'"新专辑？需要帮忙宣传吗？"',effects:{affection:8,charm:5}}] },
+    { title: 'Phase 2: 酒吧偶遇',
+      text: (h) => `你决定去酒吧碰碰运气。没想到，<span class="hero-name">${h.name}</span>真的在！他和朋友们在包厢，似乎喝了一点酒。他看到你，有些惊讶。`,
+      options: [{text:'自然地走过去打招呼",没想到在这里遇到你"',effects:{affection:15,courage:10}},{text:'远远看着，等他注意到你',effects:{affection:8}},{text:'转身离开，不想被认为是跟踪',effects:{rational:10,courage:-5}}],
+      onChoose: () => { gameState.flags.barMet = true; } },
+    { title: 'Phase 2: 深夜来电',
+      text: (h) => `凌晨2点，<span class="hero-name">${h.name}</span>打来电话。他的声音有些醉意："你在哪...我想找人聊聊。"`,
+      options: [{text:'"我在家，你怎么了？"',effects:{affection:10,emotion:5}},{text:'"你是不是喝多了？要不要休息？"',effects:{affection:5,rational:10}},{text:'立刻出门去找他',effects:{affection:15,courage:15}}] },
+    { title: 'Phase 3: 暧昧 - 跟踪+救助流浪狗',
+      text: (h) => `你跟着<span class="hero-name">${h.name}</span>的车，发现他在路边停下来了。原来是一只流浪狗受伤了，他正蹲下来检查。你要怎么做？`,
+      options: [{text:'也下车帮他一起照顾小狗',effects:{affection:15,emotion:10,happiness:10}},{text:'在旁边看着，不打扰他',effects:{affection:5}},{text:'主动提出收养这只狗',effects:{affection:20,courage:10,happiness:15}}],
+      onChoose: () => { gameState.flags.rescuedDog = true; gameState.flags.followedHome = true; } },
+    { title: 'Phase 3: 暧昧 - 公司开放日',
+      text: (h) => `公司举办粉丝开放日，<span class="hero-name">${h.name}</span>和你被分到同一组做游戏。`,
+      options: [{text:'主动配合他，默契完成游戏',effects:{affection:10,emotion:8}},{text:'趁机表现自己，吸引他注意',effects:{affection:5,charm:10}},{text:'故意输掉让他开心',effects:{affection:8,courage:5}}] },
+    { title: 'Phase 3: 限时 - 直播意外',
+      text: (h) => `<span class="hero-name">${h.name}</span>直播时不小心把你的照片当背景放了一秒！弹幕炸了！<br><strong>快！5秒内决定怎么做！</strong>`,
+      timed: true, timeLimit: 5,
+      options: [{text:'在评论区互动，大方承认是粉丝',effects:{affection:10,charm:8}},{text:'私信他提醒他注意',effects:{affection:8,emotion:8}},{text:'假装没看见，低调处理',effects:{affection:3,rational:8}}] },
+    { title: 'Phase 4: 告白前夜 - 秘密约会',
+      text: (h) => `<span class="hero-name">${h.name}</span>约你在一家安静的咖啡馆见面。他看起来有些紧张，但眼神很温柔。`,
+      options: [{text:'"今天约我出来，是有什么话想说吗？"',effects:{affection:10,courage:8}},{text:'先聊日常，等他主动开口',effects:{affection:8,emotion:5}},{text:'"其实我也一直想单独见你。"',effects:{affection:15,courage:10,emotion:8}}] },
+    { title: 'Phase 4: 限时 - 心跳瞬间',
+      text: (h) => `咖啡馆外突然下起了雨，<span class="hero-name">${h.name}</span>把外套披在你身上。你们靠得很近，他低头看着你。<br><strong>快！5秒！</strong>`,
+      timed: true, timeLimit: 5,
+      options: [{text:'抬头看着他，对视',effects:{affection:18,courage:8}},{text:'低头害羞，不说话',effects:{affection:10,courage:3}},{text:'主动说一句"谢谢"',effects:{affection:12,emotion:8}}] },
+    { title: 'Phase 4: 告白',
+      text: (h, p) => {
+        let base = `<span class="hero-name">${h.name}</span>看着你，认真地说：`;
+        if (p === 'warm') return base + `<br>"其实我一直想告诉你......我喜欢你。不是粉丝那种喜欢。"`;
+        return base + `<br>"......我。"（他深吸一口气）"我喜欢你。别告诉别人。"`;
+      },
+      options: (p) => {
+        if (p === 'warm') return [{text:'"我也是！"',effects:{affection:20,courage:8,emotion:12}},{text:'"可是你的粉丝和公司......"',effects:{affection:5,rational:10}}];
+        return [{text:'"我知道。"',effects:{affection:25,courage:8,emotion:15}},{text:'"我也是。"',effects:{affection:20,courage:5,emotion:12}}];
+      } }
+];
+
+// 下章场景 (20个)
+const chapter2Scenes = [
+    { title: '下章 Phase 1: 恋人初体验 - 第一次正式约会',
+      text: (h) => `你们第一次以恋人身份约会。<span class="hero-name">${h.name}</span>牵着你的手，说："想去哪？我都陪你。"`,
+      options: [{text:'"去游乐园吧，想看你紧张的样子"',effects:{affection:10,happiness:10,courage:5}},{text:'"安静的地方就好，想好好和你说话"',effects:{affection:12,emotion:8}}] },
+    { title: '下章 Phase 1: 甜蜜日常 - 早安消息',
+      text: (h) => `早上醒来，<span class="hero-name">${h.name}</span>发来消息："早安，昨晚梦到你了。"`,
+      options: [{text:'"我也是！今天也要开心哦"',effects:{affection:8,happiness:8}},{text:'"梦到我什么了？"',effects:{affection:10,emotion:5}}] },
+    { title: '下章 Phase 1: 考验 - 绯闻出现',
+      text: (h) => `网上突然传出<span class="hero-name">${h.name}</span>和同公司女艺人的绯闻。你看到了，心里不舒服。`,
+      options: [{text:'直接问他"这是怎么回事？"',effects:{affection:5,courage:10}},{text:'默默观察，等他解释',effects:{affection:3,rational:10,emotion:5}},{text:'在SNS上暗戳戳回应',effects:{charm:8,courage:8}}] },
+    { title: '下章 Phase 1: 信任 - 他的回应',
+      text: (h) => `<span class="hero-name">${h.name}</span>看到你的反应，主动解释："那只是工作，你别多想。"`,
+      options: [{text:'"我相信你，但你下次提前告诉我好不好"',effects:{affection:12,emotion:10,rational:5}},{text:'"知道了"（其实心里还是有疙瘩）',effects:{affection:3,happiness:-5}},{text:'"我不会干涉你的工作"',effects:{affection:5,rational:10}}] },
+    { title: '下章 Phase 2: 事业 - 成为网红',
+      text: (h) => `因为你写的追星长文火了，粉丝数突破10万。有MCN公司找你签约做网红。你要怎么做？`,
+      options: [{text:'签约MCN，正式做网红博主',effects:{charm:15,courage:10,happiness:10},flag:{becameInfluencer:true}},{text:'拒绝签约，保持自由身',effects:{rational:10,happiness:5}},{text:'先做兼职博主试试',effects:{charm:8,emotion:5}}] },
+    { title: '下章 Phase 2: 网红日常 - 第一条Vlog',
+      text: () => `你的第一条Vlog发布，内容是"从粉丝到恋人的真实故事"（隐去了他的名字）。播放量破百万。评论区有人猜男主是谁。`,
+      check: (s, f) => { if (f.becameInfluencer) return null; return { skip: true, alt: 7 }; },
+      skipText: '因为你没有签约MCN，这个场景跳过了。',
+      options: [{text:'在评论区暗示"他是很好的人，请尊重他的隐私"',effects:{affection:10,emotion:10,rational:5}},{text:'不回应，保持神秘',effects:{charm:5,rational:5}},{text:'开玩笑说"是顶流哦~"',effects:{charm:10,courage:10}}] },
+    { title: '下章 Phase 2: 事业与爱情 - 他的态度',
+      text: (h) => `<span class="hero-name">${h.name}</span>看到你的Vlog后有些不安："你公开这些，没关系吗？"`,
+      options: [{text:'"我不会暴露你的，你放心"',effects:{affection:10,rational:5,emotion:5}},{text:'"你不信任我吗？"',effects:{affection:-5,courage:10}},{text:'"我在用自己的方式支持你"',effects:{affection:12,emotion:10}}] },
+    { title: '下章 Phase 2: 危机前兆 - 他变了',
+      text: (h) => `最近<span class="hero-name">${h.name}</span>变得很忙，消息回得慢，态度也有些冷淡。你感觉到了变化。`,
+      options: [{text:'理解他工作忙，主动关心',effects:{affection:8,emotion:10}},{text:'直接问"你是不是对我冷淡了？"',effects:{affection:3,courage:10}},{text:'冷战，他找你就回，不找就不找他',effects:{courage:5,happiness:-5}}] },
+    { title: '下章 Phase 3: 分手危机 - 爆发',
+      text: (h) => `你发现<span class="hero-name">${h.name}</span>和那个女艺人又一起上节目了，两人互动亲密。你终于忍不住，打电话质问他。`,
+      options: [{text:'"你和她的互动是不是太过分了？"',effects:{affection:-5,courage:10,rational:-5}},{text:'"我们谈谈吧，关于我们的未来"',effects:{affection:5,emotion:10}},{text:'什么都不说，直接拉黑',effects:{affection:-15,courage:10,happiness:-10},flag:{brokeUp:true}}] },
+    { title: '下章 Phase 3: 分手危机 - 他的回应',
+      text: (h) => `<span class="hero-name">${h.name}</span>沉默了很久，说："我最近真的很累，公司让我配合宣传，我也没办法。"`,
+      options: [{text:'"我理解你，但我们需要找到解决办法"',effects:{affection:15,emotion:10,rational:5}},{text:'"那你打算一直这样下去吗？"',effects:{affection:5,courage:10}},{text:'"那你好好想清楚再联系我"',effects:{affection:-10,courage:10,rational:10}}] },
+    { title: '下章 Phase 3: 分手危机 - 挽回',
+      text: (h) => `你决定给他一点时间。两天后，他主动联系你："我想清楚了，我不想失去你。"`,
+      options: [{text:'"我也是，我们一起面对吧"',effects:{affection:20,emotion:15,happiness:15}},{text:'"你确定吗？我不想再受伤了"',effects:{affection:15,courage:10,emotion:10}},{text:'"我需要时间想想"',effects:{affection:5,rational:10,courage:5}}] },
+    { title: '下章 Phase 3: 和好 - 他的承诺',
+      text: (h) => `<span class="hero-name">${h.name}</span>认真地说："我会和公司谈，我不想再让你受委屈了。"`,
+      options: [{text:'"我相信你，但你要说到做到"',effects:{affection:15,emotion:10,rational:5}},{text:'"不用勉强，我能等"',effects:{affection:10,happiness:5,emotion:8}}] },
+    { title: '下章 Phase 4: 未来 - 公开的选择',
+      text: (h) => `经过深思熟虑，<span class="hero-name">${h.name}</span>问你："你想公开我们的关系吗？"`,
+      options: [{text:'"公开吧，我不想再偷偷摸摸了"',effects:{affection:15,courage:15,happiness:10}},{text:'"再等等，等时机成熟"',effects:{affection:5,rational:10}},{text:'"你愿意为我公开吗？"',effects:{affection:10,emotion:10}}] },
+    { title: '下章 Phase 4: 未来 - 他的事业',
+      text: (h) => `<span class="hero-name">${h.name}</span>的新专辑大卖，事业上升期。但你们的关系也开始被更多粉丝察觉。`,
+      options: [{text:'做他背后的女人，默默支持',effects:{affection:10,happiness:5,emotion:8}},{text:'用自己的方式（网红身份）为他宣传',effects:{charm:10,affection:8},check:{stat:'charm',threshold:50}},{text:'和他讨论退出娱乐圈的可能性',effects:{affection:5,courage:10}}] },
+    { title: '下章 Phase 4: 限时 - 狗仔偷拍',
+      text: (h) => `狗仔拍到了你们约会的照片！媒体联系你，想要独家采访。<br><strong>快！5秒内决定！</strong>`,
+      timed: true, timeLimit: 5,
+      options: [{text:'拒绝所有采访，保持沉默',effects:{affection:10,rational:10}},{text:'主动公开，掌握话语权',effects:{affection:15,courage:15,charm:10}},{text:'找律师发声明',effects:{rational:15,affection:5}}] },
+    { title: '下章 Phase 4: 未来 - 粉丝的反应',
+      text: (h) => `你们的关系曝光后，粉丝分成两派。一部分祝福，一部分脱粉。你要看评论区吗？`,
+      options: [{text:'看，了解粉丝想法',effects:{rational:5,happiness:-5}},{text:'不看，相信他',effects:{affection:10,happiness:5}},{text:'发一条感恩粉丝的微博',effects:{charm:10,emotion:10,affection:5}}] },
+    { title: '下章 Phase 4: 未来 - 见家长',
+      text: (h) => `<span class="hero-name">${h.name}</span>说想带你回家见父母。这是关系正式被认可的重要一步。`,
+      options: [{text:'精心准备，展现最好的自己',effects:{affection:10,charm:10,courage:5}},{text:'自然地做自己，真诚最重要',effects:{affection:12,emotion:8,happiness:5}},{text:'有些紧张，但愿意试试',effects:{affection:8,courage:5}}] },
+    { title: '下章 Phase 4: 未来 - 他的求婚',
+      text: (h, p) => {
+        let base = `<span class="hero-name">${h.name}</span>在一个特别的日子里，向你求婚了。`;
+        if (p === 'warm') return base + `<br>"从看到你的第一眼起，我就知道你是我的唯一。嫁给我好吗？"`;
+        return base + `<br>"......我。"（他紧张得手都在抖）"嫁给我。"`;
+      },
+      options: [{text:'"我愿意！"',effects:{affection:25,happiness:25,courage:10}},{text:'"让我想想"',effects:{rational:10,happiness:-5}}] },
+    { title: '下章 Phase 4: 结局 - 婚礼筹备',
+      text: (h) => `你们开始筹备婚礼。粉丝们纷纷祝福，媒体争相报道。<span class="hero-name">${h.name}</span>在SNS上写道："感谢她出现在我的生命中。"`,
+      options: [{text:'发一条回应："谢谢你选择了我的"',effects:{affection:15,happiness:15,emotion:10}},{text:'低调筹备，不想太张扬',effects:{rational:10,happiness:10}}] },
+    { title: '最终章 - 你们的未来',
+      text: (h) => `一年后，你们的婚礼在亲友的祝福中举行。你看着<span class="hero-name">${h.name}</span>，想起了从粉丝到恋人的这段旅程。`,
+      options: [{text:'"谢谢你让我成为最幸福的人"',effects:{affection:20,happiness:20,emotion:15}},{text:'"未来也要一起走哦"',effects:{affection:15,happiness:15}}] }
+];
+
+let sceneTimers = [];
+function clearSceneTimers() { sceneTimers.forEach(t => { clearInterval(t); clearTimeout(t); }); sceneTimers = []; }
+
+function startGame() {
+    gameState.hero.name = document.getElementById('heroName').value || '金泰亨';
+    gameState.hero.role = document.querySelector('input[name="role"]:checked').value;
+    gameState.hero.personality = document.querySelector('input[name="personality"]:checked').value;
+    gameState.hero.fame = document.querySelector('input[name="fame"]:checked').value;
+    document.getElementById('setupScreen').classList.add('hidden');
+    document.getElementById('heroineScreen').classList.remove('hidden');
+}
+
+function startGame2() {
+    gameState.heroine.money = document.querySelector('input[name="money"]:checked').value;
+    gameState.heroine.dress = document.querySelector('input[name="dress"]:checked').value;
+    gameState.heroine.makeup = document.querySelector('input[name="makeup"]:checked').value;
+    if (gameState.heroine.money === 'beauty') gameState.stats.charm += 15;
+    else if (gameState.heroine.money === 'study') { gameState.stats.rational += 15; gameState.stats.emotion += 10; }
+    else gameState.stats.rational += 10;
+    if (gameState.heroine.dress === 'sexy') gameState.stats.charm += 10;
+    else if (gameState.heroine.dress === 'pure') gameState.stats.happiness += 10;
+    else gameState.stats.courage += 10;
+    if (gameState.heroine.makeup === 'heavy') gameState.stats.charm += 8;
+    else if (gameState.heroine.makeup === 'light') gameState.stats.emotion += 5;
+    else { gameState.stats.courage += 8; gameState.stats.charm += 5; }
+    updateStatsUI();
+    document.getElementById('heroDisplayName').textContent = gameState.hero.name;
+    document.getElementById('heroRoleTag').textContent = roleLabels[gameState.hero.role];
+    document.getElementById('heroPersonalityTag').textContent = personalityLabels[gameState.hero.personality];
+    document.getElementById('heroFameTag').textContent = fameLabels[gameState.hero.fame];
+    document.getElementById('heroAvatar').textContent = gameState.hero.personality === 'warm' ? '😊' : '😏';
+    document.getElementById('heroineScreen').classList.add('hidden');
+    document.getElementById('gameScenes').classList.remove('hidden');
+    showScene(1, 1);
+}
+
+function showScene(idx, chapter) {
+    clearSceneTimers();
+    gameState.currentScene = idx;
+    gameState.chapter = chapter;
+    const scenes = chapter === 1 ? chapter1Scenes : chapter2Scenes;
+    if (idx >= scenes.length) {
+        if (chapter === 1) { showChapter1Ending(); return; }
+        showFinalEnding(); return;
+    }
+    const scene = scenes[idx];
+    // 检查场景条件
+    if (scene.check) {
+        const result = scene.check(gameState.stats, gameState.flags);
+        if (result && result.skip) {
+            if (result.effects) {
+                for (let key in result.effects) {
+                    if (key !== 'happiness') gameState.stats[key] = Math.max(0, Math.min(100, gameState.stats[key] + result.effects[key]));
+                }
+                gameState.stats.happiness = Math.round((gameState.stats.affection + gameState.stats.courage + gameState.stats.emotion + gameState.stats.charm) / 4);
+                updateStatsUI();
+            }
+            if (result.msg) {
+                document.getElementById('sceneTitle').textContent = scene.title;
+                document.getElementById('dialogueText').innerHTML = result.msg;
+                const area = document.getElementById('optionsArea'); area.innerHTML = '';
+                const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = '继续';
+                btn.onclick = () => showScene(result.alt, chapter); area.appendChild(btn);
+                return;
+            }
+            if (result.alt) { showScene(result.alt, chapter); return; }
+            document.getElementById('sceneTitle').textContent = '跳过';
+            document.getElementById('dialogueText').innerHTML = scene.skipText || '场景跳过。';
+            const area = document.getElementById('optionsArea'); area.innerHTML = '';
+            const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = '继续';
+            btn.onclick = () => showScene(idx + 1, chapter); area.appendChild(btn);
+            return;
+        }
+    }
+    document.getElementById('sceneTitle').textContent = scene.title;
+    const totalScenes = chapter1Scenes.length - 1 + chapter2Scenes.length;
+    const currentTotal = (chapter === 1 ? idx - 1 : chapter1Scenes.length - 2 + idx);
+    document.getElementById('progressFill').style.width = (currentTotal / totalScenes * 100) + '%';
+    const text = typeof scene.text === 'function' ? scene.text(gameState.hero, gameState.hero.personality) : scene.text;
+    document.getElementById('dialogueText').innerHTML = text;
+    const area = document.getElementById('optionsArea'); area.innerHTML = '';
+    if (scene.timed) {
+        let left = scene.timeLimit;
+        const timerDiv = document.createElement('div');
+        timerDiv.style.cssText = 'margin-bottom:10px;color:var(--primary-dark);font-weight:600;font-size:14px;';
+        timerDiv.textContent = `⏱️ ${left}秒`; area.appendChild(timerDiv);
+        const iv = setInterval(() => { left--; timerDiv.textContent = `⏱️ ${left}秒`; if (left <= 0) { clearInterval(iv); clearSceneTimers(); selectOption(scenes[idx].options[0].effects, chapter); } }, 1000);
+        sceneTimers.push(iv);
+        const st = setTimeout(() => { area.querySelectorAll('.option-btn').forEach(b => b.disabled = true); }, scene.timeLimit * 1000);
+        sceneTimers.push(st);
+    }
+    const opts = typeof scene.options === 'function' ? scene.options(gameState.hero.personality) : scene.options;
+    opts.forEach(opt => {
+        const btn = document.createElement('button'); btn.className = 'option-btn'; btn.textContent = opt.text;
+        btn.onclick = () => selectOption(opt.effects, chapter, opt.flag);
+        area.appendChild(btn);
+    });
+}
+
+function selectOption(effects, chapter, flag) {
+    clearSceneTimers();
+    let changes = [];
+    for (let key in effects) {
+        if (key === 'happiness') continue;
+        gameState.stats[key] = Math.max(0, Math.min(100, gameState.stats[key] + effects[key]));
+        changes.push(`${key==='affection'?'好感度':key==='courage'?'勇气':key==='emotion'?'情商':key==='charm'?'魅力':'理智'}${effects[key]>0?'+':''}${effects[key]}`);
+    }
+    gameState.stats.happiness = Math.round((gameState.stats.affection + gameState.stats.courage + gameState.stats.emotion + gameState.stats.charm) / 4);
+    // 处理flag
+    if (flag) { for (let f in flag) gameState.flags[f] = flag[f]; }
+    // 处理场景onChoose
+    const scenes = chapter === 1 ? chapter1Scenes : chapter2Scenes;
+    if (scenes[gameState.currentScene] && scenes[gameState.currentScene].onChoose) scenes[gameState.currentScene].onChoose();
+    updateStatsUI();
+    showStatChange(changes.join('  '));
+    setTimeout(() => showScene(gameState.currentScene + 1, chapter), 1000);
+}
+
+function updateStatsUI() {
+    const s = gameState.stats;
+    ['affection','courage','emotion','charm','rational','happiness'].forEach(k => {
+        const name = k.charAt(0).toUpperCase() + k.slice(1);
+        document.getElementById('val'+name).textContent = s[k];
+        document.getElementById('bar'+name).style.width = s[k] + '%';
+    });
+}
+
+function showStatChange(text) {
+    const div = document.createElement('div'); div.className = 'stat-change'; div.textContent = text;
+    document.body.appendChild(div); setTimeout(() => div.remove(), 1500);
+}
+
+function showChapter1Ending() {
+    const s = gameState.stats; const h = gameState.heroine;
+    let name, desc;
+    if (s.affection >= 70 && s.courage >= 55 && s.happiness >= 60) { name = '半公开的女朋友'; desc = '你们开始了低调的恋情。他会在深夜偷偷给你发消息，你会在演唱会最前排等他一个眼神。'; }
+    else if (s.affection >= 50 && s.courage >= 40) { name = '月光恋人'; desc = '你们保持着若有似无的关系，深夜是恋人，白天是陌生人。'; }
+    else if (s.affection >= 40 && s.charm >= 45) { name = '一人之下万人之上'; desc = '你没有成为他的恋人，却成为了他最信任的粉丝。'; }
+    else if (s.affection >= 30) { name = '友人以上 恋人未满'; desc = '你们是很好的朋友，虽然不是恋人，但关系比普通粉丝深得多。'; }
+    else { name = '最懂他的普通粉丝'; desc = '你没有走到他身边，但你比任何人都了解他。'; }
+    if (h && h.dress === 'sexy' && name === '月光恋人') desc += ' 你那天穿的露肩包臀裙，他一定还记得。';
+    else if (h && h.dress === 'pure' && name === '半公开的女朋友') desc += ' 你那天穿的纯色连衣裙，是他心里最干净的样子。';
+    document.getElementById('endingTitle').textContent = '上章结局';
+    document.getElementById('endingName').textContent = name;
+    document.getElementById('endingDesc').textContent = desc;
+    const statNames = {affection:'好感度',courage:'勇气',emotion:'情商',charm:'魅力',rational:'理智',happiness:'幸福值'};
+    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">';
+    for (let k in s) html += `<div><div style="font-size:24px;color:var(--primary-dark);font-weight:600;">${s[k]}</div><div style="font-size:12px;color:var(--text-light);">${statNames[k]}</div></div>`;
+    html += '</div><div class="chapter-transition" style="margin-top:20px;"><h2>是否继续体验下章？</h2><p>下章将讲述你们成为恋人后的故事，包含分手危机、事业发展和最终结局。</p><button class="start-btn" onclick="startChapter2()" style="margin-top:15px;max-width:200px;margin-left:auto;margin-right:auto;">进入下章</button></div>';
+    document.getElementById('finalStats').innerHTML = html;
+    document.getElementById('gameScenes').classList.add('hidden');
+    document.getElementById('endingScreen').classList.remove('hidden');
+}
+
+function startChapter2() {
+    document.getElementById('endingScreen').classList.add('hidden');
+    document.getElementById('gameScenes').classList.remove('hidden');
+    document.getElementById('heroCard').style.display = 'flex';
+    showScene(1, 2);
+}
+
+function showFinalEnding() {
+    const s = gameState.stats; const f = gameState.flags;
+    let name, desc;
+    if (s.affection >= 80 && s.happiness >= 70) { name = '完美结局：从粉丝到新娘'; desc = '你从一名普通粉丝，成为了他生命中最重要的人。你们的爱情故事感动了整个娱乐圈。'; }
+    else if (s.affection >= 60 && !f.brokeUp) { name = '甜蜜恋人：低调幸福'; desc = '你们保持着低调的恋情，虽然没有公开，但彼此都知道对方是生命中不可或缺的人。'; }
+    else if (s.affection >= 50 && f.becameInfluencer) { name = '独立女性：事业爱情双赢'; desc = '你成为了有影响力的网红，同时也维持着和他的关系。你是粉丝圈的传奇人物。'; }
+    else if (f.brokeUp) { name = '遗憾分手：最美的回忆'; desc = '你们最终选择了分开。但这段时间的回忆，依然是你生命中最美好的部分。'; }
+    else if (s.affection >= 35) { name = '继续同行：不完美但幸福'; desc = '你们的关系不完美，但还在继续。未来会怎样？也许时间会给出答案。'; }
+    else { name = '渐行渐远：回到原点'; desc = '你们的关系慢慢变淡，你回到了普通粉丝的身份。但你成长了，这就是意义。'; }
+    document.getElementById('endingTitle').textContent = '最终结局';
+    document.getElementById('endingName').textContent = name;
+    document.getElementById('endingDesc').textContent = desc;
+    const statNames = {affection:'好感度',courage:'勇气',emotion:'情商',charm:'魅力',rational:'理智',happiness:'幸福值'};
+    let html = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:15px;text-align:center;">';
+    for (let k in s) html += `<div><div style="font-size:24px;color:var(--primary-dark);font-weight:600;">${s[k]}</div><div style="font-size:12px;color:var(--text-light);">${statNames[k]}</div></div>`;
+    html += '</div>';
+    document.getElementById('finalStats').innerHTML = html;
+    document.getElementById('gameScenes').classList.add('hidden');
+    document.getElementById('endingScreen').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
