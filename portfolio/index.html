@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jessica Zeng · 文字作品集</title>
+<style>
+  :root {
+    --bg: #fafaf8;
+    --card-bg: rgba(255,255,255,0.85);
+    --text: #2c2c2c;
+    --text-secondary: #6b6b6b;
+    --text-tertiary: #999;
+    --border: #e8e6e1;
+    --accent: #b5835a;
+    --accent-light: #f5eee6;
+    --tag-article: #e8edf2;
+    --tag-video: #f4e8f0;
+    --tag-project: #e8f0e8;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    --shadow-hover: 0 1px 3px rgba(0,0,0,0.06), 0 12px 32px rgba(0,0,0,0.06);
+    --bg-image: url('campus-bg.png');
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: "PingFang SC", "Noto Serif SC", "Source Han Serif SC", "Songti SC", Georgia, "Times New Roman", serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    position: relative;
+    min-height: 100vh;
+  }
+
+  /* ── Campus watercolor background ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background: var(--bg-image) center/cover no-repeat;
+    opacity: 0.10;
+    pointer-events: none;
+    filter: saturate(0.7);
+  }
+
+  /* Content layer above background */
+  .header, .divider, .works-grid, .footer {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 80px 24px 56px;
+    text-align: center;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+  .header h1 {
+    font-size: 28px;
+    font-weight: 400;
+    letter-spacing: 2px;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .header .bio {
+    font-size: 15px;
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  /* ── Divider ── */
+  .divider {
+    width: 40px;
+    height: 1px;
+    background: var(--border);
+    margin: 0 auto 64px;
+  }
+
+  /* ── Grid ── */
+  .works-grid {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 20px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 28px 24px 24px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.25s ease;
+    position: relative;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: #d5cfc6;
+    background: rgba(255,255,255,0.95);
+  }
+
+  /* Tag */
+  .card .tag-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+  }
+  .card .tag {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+  .tag.article { background: var(--tag-article); color: #4a637a; }
+  .tag.video  { background: var(--tag-video);  color: #7a4a6a; }
+  .tag.project { background: var(--tag-project); color: #4a6a4a; }
+
+  /* Title */
+  .card .title {
+    font-size: 17px;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 12px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  /* Source */
+  .card .source {
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card .source .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.5;
+  }
+
+  /* Arrow indicator on hover */
+  .card .arrow {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    font-size: 14px;
+    color: #ccc;
+    transition: all 0.25s ease;
+    opacity: 0;
+    transform: translateX(-4px);
+  }
+  .card:hover .arrow {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--accent);
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 0 24px 48px;
+    font-size: 12px;
+    color: var(--text-tertiary);
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  /* ── Credit ── */
+  .bg-credit {
+    position: fixed;
+    bottom: 12px;
+    right: 16px;
+    font-size: 10px;
+    color: var(--text-tertiary);
+    z-index: 2;
+    opacity: 0.5;
+    font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .header { padding: 56px 20px 40px; }
+    .header h1 { font-size: 24px; }
+    .works-grid {
+      grid-template-columns: 1fr;
+      padding: 0 16px 60px;
+    }
+    .card { padding: 24px 20px 20px; }
+  }
+</style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="header">
+    <h1>Jessica Zeng</h1>
+    <p class="bio">文字作品集</p>
+  </header>
+
+  <div class="divider"></div>
+
+  <!-- Works Grid -->
+  <section class="works-grid">
+
+    <!-- Article 1 -->
+    <a class="card" href="https://mp.weixin.qq.com/s/4XEimcWnh_q3K15cJhFPZg" target="_blank" rel="noopener">
+      <span class="arrow">↗</span>
+      <div class="tag-row">
+        <span class="tag article">文章</span>
+        <span class="tag article">金融</span>
+      </div>
+      <h2 class="title">2天输光200亿美元，老虎门徒与华尔街"世纪大爆仓"</h2>
+      <span class="source"><span class="dot"></span> 微信公众号</span>
+    </a>
+
+    <!-- Article 2 -->
+    <a class="card" href="https://mp.weixin.qq.com/s/f4-Gw8fVqevv_4cwuxwjTA" target="_blank" rel="noopener">
+      <span class="arrow">↗</span>
+      <div class="tag-row">
+        <span class="tag article">文章</span>
+        <span class="tag article">科技</span>
+      </div>
+      <h2 class="title">乘东风而起却深陷审计财务丑闻，AI第一妖股SMCI的魔幻2024</h2>
+      <span class="source"><span class="dot"></span> 微信公众号</span>
+    </a>
+
+    <!-- Article 3 -->
+    <a class="card" href="https://mp.weixin.qq.com/s/317SAEj9b5d5FRWFevmQwg" target="_blank" rel="noopener">
+      <span class="arrow">↗</span>
+      <div class="tag-row">
+        <span class="tag article">文章</span>
+        <span class="tag article">投资</span>
+      </div>
+      <h2 class="title">回首孙正义：写在软银千亿美元领投Open AI前</h2>
+      <span class="source"><span class="dot"></span> 微信公众号</span>
+    </a>
+
+    <!-- Video -->
+    <a class="card" href="https://www.bilibili.com/video/BV1dKYoznEEP/" target="_blank" rel="noopener">
+      <span class="arrow">↗</span>
+      <div class="tag-row">
+        <span class="tag video">视频</span>
+        <span class="tag video">社会</span>
+      </div>
+      <h2 class="title">失控的芬太尼：药物滥用背后的权力、金钱与死亡</h2>
+      <span class="source"><span class="dot"></span> Bilibili</span>
+    </a>
+
+    <!-- Project -->
+    <a class="card" href="https://jz1021.github.io/-/" target="_blank" rel="noopener">
+      <span class="arrow">↗</span>
+      <div class="tag-row">
+        <span class="tag project">项目</span>
+        <span class="tag project">互动叙事</span>
+      </div>
+      <h2 class="title">嫂嫂模拟器</h2>
+      <span class="source"><span class="dot"></span> GitHub Pages</span>
+    </a>
+
+  </section>
+
+  <footer class="footer">
+    © 2025 Jessica Zeng
+  </footer>
+
+  <!-- Background art credit -->
+  <span class="bg-credit">背景：哥伦比亚大学校园</span>
+
+</body>
+</html>
